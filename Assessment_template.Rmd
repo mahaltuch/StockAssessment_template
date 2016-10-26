@@ -1,5 +1,5 @@
 ---
-title: 'Status of China Rockfish (*Sebastes nebulosus*) Along the U.S. Pacific Coast in x2015x'
+title: 'Status of Lingcod (*Ophiodon elongatus*) Along the U.S. Pacific Coast in 2017'
 author: ''
 date: ''
 output:
