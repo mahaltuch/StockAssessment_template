@@ -84,7 +84,7 @@ do.call(file.remove, list(list.files(file.path(output.dir,'plots_mod3'), full.na
 
 
 # Run r4ss for each model - **CHANGE DIRECTORY if necessary**
-               mod1 = SS_output(dir = file.path(input.dir,'Base_model1'), forecast=T, covar=T, ncol=1000)
+               mod1 = SS_output(dir = file.path(input.dir,'Base_model1'), forecast=T, covar=F, ncol=1000)
 if(n_models>1){mod2 = SS_output(dir = file.path(input.dir,'Base_model2'), forecast=T, covar=T, ncol=1000)}
 if(n_models>2){mod3 = SS_output(dir = file.path(input.dir,'Base_model3'), forecast=T, covar=T, ncol=1000)}
 
@@ -107,7 +107,7 @@ SS_plots(mod1,
          png=TRUE,
          html=FALSE,
          datplot=TRUE,
-         uncertainty=TRUE,
+         uncertainty=FALSE,
          maxrows=6, 
          maxcols=6, 
          maxrows2=4, 

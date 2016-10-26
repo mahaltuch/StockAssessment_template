@@ -1,0 +1,76 @@
+Converting petrale 2015
+
+1.  run 3.24  get:    8 2192 -log(L): 1510.29  Spbio: 33604.3 9152.72
+a.  see that in dat file seasontiming is used.  It is a bit incorrect as it tries to use season timing for fishing fleets.  change all these to 0.5:
+#0.16 0.67 0.16 0.67 0.73 0.67 0.67 #_surveytiming_in_season
+b.  rerun with these revised timings, get:
+8 1764 -log(L): 1509.06  Spbio: 33668.9 9471.07
+
+2.  prep to run sstrans
+a.  turn off read parfile
+b.  set maxphase to 0
+
+3.  run sstrans with -nohess and maxphase=0 so it simply will read the 3.24 files and write *.ss_new files
+a.  see warning:   Only parm_adjust_method 1 and 3 implemented in SS3.30; resetting value to 1 
+b.  this is an issue, so best to change the value to "1" in the ctl file to be converted, also turn off the custom read of selex timevary parameters
+    with custom off, SStrans will autogenerate those parameters, then you can go in and customize these later
+    0 #_custom block setup (0/1)
+    -15 15 0 0 -1 99 4 # this line required by ss3.24 and sstrans to read, but will be overwrittern by sstrans
+    1   #no logistic bounding
+d.  run sstrans with -nohess again and get those ss_new files
+
+4.  copy *.ss_new files to new folder, ss330, and rename files appropriately
+
+5.  open the new version of petrale15.ctl in editor, note that:
+    a.  a 4th time block has been added for 1875 (styr-1) in case you want to use the new SR_regime parameter to have a time block that replicates the 3.24 R1_offset
+    b.  the Q setup is now quite different and looks like:
+    #_  fleet     link link_info extra_se  biasadj   float  #  fleetname
+            1        3        0        0        1        0  #  WinterN
+            3        3        0        0        1        0  #  WinterS
+            5        1        0        1        0        1  #  TriEarly
+            6        1        0        1        0        1  #  TriLate
+            7        1        0        0        0        1  #  NWFSC
+    -9999 0 0 0 0 0
+
+    c.  the random walk in Q for two fleets now shows up in the long parameter line for the base Q parameters, e.g.:
+    #_      LO        HI      INIT     PRIOR   PR_SD  PR_type      PHASE env-var use_dev dev_mnyr dev_mxyr dev_PH   Block Blk_Fxn  #  parm_name
+     -20.000000   5.000000  -9.000000   0.000000  99.000000   0.000000       1       0       1    1987    2009      -5       0       0  #  LnQ_base_WinterN(1)
+
+    d.  then note that time-vary properties of these dev vectors is in new parameter lines:
+    # timevary Q parameters 
+    #_      LO        HI      INIT     PRIOR   PR_SD  PR_type      PHASE
+         0.0001     2.0000    99.0000    99.0000     0.5000     6.0000      -5  # LnQ_base_WinterN(1)_dev_se
+        -0.9900     0.9900     0.0000     0.0000     0.5000     6.0000      -6  # LnQ_base_WinterN(1)_dev_autocorr
+         0.0001     2.0000    99.0000    99.0000     0.5000     6.0000      -5  # LnQ_base_WinterS(3)_dev_se
+        -0.9900     0.9900     0.0000     0.0000     0.5000     6.0000      -6  # LnQ_base_WinterS(3)_dev_autocorr
+    # info on dev vectors created for Q parms are reported with other devs after tag parameter section 
+
+    e.  Note that only one of these devs was estimated in 3.24 to create a block effect.  In 3.30, this will be done directly as a block:
+    
+
+    f.  Also note that what was previously use of Q_power in 3.24:
+    -5	5  0.38  0      -1       99  3	#(log) power parameter N Winter			
+    -5	5  0.16  0      -1       99  3	#(log) power parameter S Winter			
+
+    now in 3.30 is invoked by setting the link type to 3.  The parameters are translated to:
+      -5.000000   5.000000   0.380000   0.000000  99.000000   0.000000       3       0       0       0       0       0       0       0  #  Q_power_WinterN(1)
+      -5.000000   5.000000   0.160000   0.000000  99.000000   0.000000       3       0       0       0       0       0       0       0  #  Q_power_WinterS(3)
+
+    Comment:  it seems OK to estimate Q_power here because devs are being created but not being estimated.
+    However, it would be redundant to estimate Q_power and devs with no penalty (e.g. with SD of devs set to 99) 
+    because those free devs could replicate the Q changes that are caused by Q_power.
+
+6.  Now try running ss (the 3.30 version)
+  a.  find that it crashes and a selex parameter is out of base parm bounds
+  b.  the errant base parameter is retention and it has additive blocks.  The bounds on the base parameter are 0.001 to 1.000 which is logical as retention >1.0 cannot occur.
+  c.  the problem is that the base parm starts with a value of 0.999 and it has additive blocks for which the parameter has bounds of -3, 2.  
+      So the adjusted parameter can easily try to exceed 1.0 and cause a crash.
+      The -3, 2 bounds may have been sensical in 3.24 because the parameter offset approach was to keep the adjsuted parameter in base bounds,
+      so the adjustment is in a transformed parameter space, not in the base parameter space
+  d.  solution - change the block type for these 4 parameters to replacement (blk_fxn=2).
+      do this in the 3.24 file that is read by trans.  
+      also change the "read custom" to 0 for the selex parameters so that the autogenerate feature in sstrans will re-create appropriate time-vary parameters
+      
+7.   1603 -log(L): 1521.08  Spbio: 33731 9524.27
+a.  seems close enough, but logL is off by 12.  This is mostly because the selex parm devs now have priors on them and this adds a logL of:  7.6, so accounts for most of it.
+

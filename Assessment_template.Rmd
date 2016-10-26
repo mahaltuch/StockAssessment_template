@@ -171,7 +171,7 @@ The estimated relative depletion level of model 3 in `r LastYR` is
 
     # Select which file to use for the recuitment figure, depending on if you have one model or multiple models
     if(n_models == 1) {
-      spawn.file  = 'r4ss/plots_mod1/ts7_Spawning_output_with_95_asymptotic_intervals_intervals.png'
+      spawn.file  = 'r4ss/plots_mod1/ts7_Spawning_biomass_(mt)_with_95_asymptotic_intervals_intervals.png'
       Bratio.file = 'r4ss/plots_mod1/ts9_Spawning_depletion_with_95_asymptotic_intervals_intervals.png' 
      } else {
       spawn.file  = 'r4ss/plots_compare/base_compare2_spawnbio_uncertainty.png'
@@ -1197,7 +1197,7 @@ assessment team. Not required in draft assessment undergoing review.
     # If you use this for more than one model = change mod1 to mod2 or mod3
     mod_params = mod1$parameters[-c(grep('Recr',mod1$parameters$Label),
                                 grep('Impl',mod1$parameters$Label)),
-                             c(1, 2, 3, 10, 6, 5, 9, 11, 12, 13, 7)]  
+                             c(1, 2, 3, 10, 6, 5, 9, 11, 12, 13, 7, 14)]  
     
     # So that decimals won't show up in these columns and control digits
     mod_params$Num = as.factor(mod_params$Num)
